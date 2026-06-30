@@ -24,6 +24,25 @@ def pool_file() -> Path:
     return config_dir() / "pool.json"
 
 
+def devices_file() -> Path:
+    return config_dir() / "devices.json"
+
+
+def load_devices() -> list[dict[str, Any]]:
+    """The pool's known machines (this one + registered peers)."""
+    path = devices_file()
+    if not path.exists():
+        return []
+    try:
+        return json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return []
+
+
+def save_devices(items: list[dict[str, Any]]) -> None:
+    devices_file().write_text(json.dumps(items, indent=2) + "\n")
+
+
 def load_pool() -> dict[str, Any] | None:
     """Return this machine's pool membership, or None if it hasn't joined one."""
     path = pool_file()

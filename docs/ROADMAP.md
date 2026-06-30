@@ -14,8 +14,18 @@ are scaffolded in code but not yet wired to exo.
 - [x] Local config under `~/.potluck/`.
 - [ ] Derive a real shared key from the invite code (currently a placeholder).
 
+## Phase 1.5 — The planner (let people decide) ✅ scaffolded
+The product philosophy: **Potluck doesn't choose route-vs-split for you — it shows
+the trade-offs and you pick.**
+- [x] Device registry: `device detect` (auto), `device add` (peers), `device ls`.
+- [x] Model sizing (dense + MoE) and quant footprints.
+- [x] `potluck plan <model>` ranks every route/split strategy with fit + est. tok/s.
+- [ ] Calibrate the speed model against real runs (replace heuristic bandwidths).
+- [ ] Pull live device specs from online peers instead of manual registration.
+
 ## Phase 2 — Engine adapter  **stub → real**
 - [ ] `potluck up` actually launches an exo node (today: prints what it *would* run).
+- [ ] Honor the chosen strategy: `potluck up --mode route|split --devices a,b`.
 - [ ] Read exo's live topology for `potluck status`.
 - [ ] Surface the OpenAI-compatible endpoint URL.
 

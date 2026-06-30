@@ -76,10 +76,42 @@ potluck pool create my-house
 # On every other machine — join it:
 potluck pool join POT-7F3A-9K2Q
 
-# On any machine — bring it online and see the combined cluster:
+# Describe your machines (auto-detect this one, add the others):
+potluck device detect
+potluck device add mac16  --ram 16 --backend metal
+potluck device add lenovo --ram 16 --backend cpu
+
+# Bring a machine online:
 potluck up
 potluck status
 ```
+
+## Decide your strategy — `potluck plan`
+
+Potluck doesn't pick *route vs split* for you. It shows you the trade-offs and
+**you decide**. Ask it about any model and it ranks every option with fit + an
+estimated tokens/sec:
+
+```text
+$ potluck plan llama-3.3-70b --quant q4 --link wifi
+
+ #  STRATEGY MACHINES                FITS   ~TOK/S  NOTE
+ 1  split    mac32 + mac16 + lenovo   yes      2.6  splits to fit a bigger model; includes a CPU node
+
+$ potluck plan qwen2.5-32b --quant q4
+
+ #  STRATEGY MACHINES                FITS   ~TOK/S  NOTE
+ 1  route    mac32                    yes      8.4  whole model on one machine — no network cost
+ 2  split    mac32 + mac16            yes      8.1  splits to fit a bigger model
+```
+
+- **route** = one machine runs the whole model. Fastest, when it fits.
+- **split** = pool memory to run a model too big for any one machine — slower, since
+  machines take turns per token and the slowest node sets the pace.
+
+Speeds are rough memory-bandwidth estimates meant to *compare* options, not to be
+benchmarks. Try `--link ethernet` / `--link thunderbolt` to see how wiring changes it,
+or `--params 120 --quant q3` to size a model that isn't in the catalog.
 
 ## Project layout
 
