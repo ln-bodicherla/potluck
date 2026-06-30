@@ -1,0 +1,42 @@
+# Roadmap
+
+Ordered so each step produces something you can actually run. Items marked **stub**
+are scaffolded in code but not yet wired to exo.
+
+## Phase 0 — Prove the core works (no Potluck code needed)
+- [ ] Install exo on 2+ of your machines.
+- [ ] Cluster them, run a model that doesn't fit on one machine.
+- [ ] Write down every painful step. **This is the real spec for Potluck.**
+
+## Phase 1 — Pool identity (the part Potluck owns) ✅ scaffolded
+- [x] `potluck pool create <name>` → generate pool id + invite code + shared key.
+- [x] `potluck pool join <code>` → store pool membership locally.
+- [x] Local config under `~/.potluck/`.
+- [ ] Derive a real shared key from the invite code (currently a placeholder).
+
+## Phase 2 — Engine adapter  **stub → real**
+- [ ] `potluck up` actually launches an exo node (today: prints what it *would* run).
+- [ ] Read exo's live topology for `potluck status`.
+- [ ] Surface the OpenAI-compatible endpoint URL.
+
+## Phase 3 — Discovery / transport
+- [ ] LAN auto-discovery of pool peers.
+- [ ] Optional Tailscale integration for off-LAN trusted pools.
+- [ ] Gate discovery by the pool's shared key.
+
+## Phase 4 — "What can I run?"
+- [ ] `potluck models` — given combined RAM/VRAM of online peers, list models that
+      fit and a rough tokens/sec estimate based on the slowest link.
+
+## Phase 5 — Dashboard
+- [ ] Minimal local web UI: online peers, combined memory, current model, throughput.
+
+## Later / maybe
+- [ ] Untrusted "batch only" mode for non-sensitive jobs.
+- [ ] Alternative engine backends (llama.cpp RPC, GPUStack).
+- [ ] Optional metering if a pool ever wants to settle costs internally.
+
+## Explicit non-goals (for now)
+- Public GPU marketplace / paying strangers.
+- Splitting a single request across the open internet.
+- Reimplementing exo's scheduler.

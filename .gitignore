@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# Potluck local state
+.potluck/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
