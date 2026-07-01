@@ -39,7 +39,16 @@ fi
 check uv    "install with: brew install uv"
 check node  "install with: brew install node   (needed to build exo's dashboard)"
 check cargo "install Rust: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && rustup toolchain install nightly"
-check xcodebuild "install Xcode from the App Store (provides the Metal toolchain for MLX)"
+check macmon "install exo's pinned fork: see https://github.com/exo-explore/exo#quick-start"
+# Full Xcode (not just Command Line Tools) provides the Metal toolchain MLX needs.
+# `command -v xcodebuild` is a false positive under CLT, so actually run it.
+if xcodebuild -version >/dev/null 2>&1; then
+  echo "    ✓ Xcode (full)"
+else
+  echo "    ✗ Xcode (full) — you have Command Line Tools only. Install Xcode from the"
+  echo "        App Store, then: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer"
+  missing=1
+fi
 
 echo
 if [ "$missing" -eq 0 ]; then
