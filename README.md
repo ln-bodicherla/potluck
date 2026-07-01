@@ -113,6 +113,38 @@ Speeds are rough memory-bandwidth estimates meant to *compare* options, not to b
 benchmarks. Try `--link ethernet` / `--link thunderbolt` to see how wiring changes it,
 or `--params 120 --quant q3` to size a model that isn't in the catalog.
 
+## Run a chosen strategy
+
+```bash
+# Route a model to one machine (fastest when it fits):
+potluck up --mode route  --devices mac32 --model qwen2.5-32b --real
+
+# Split a big model across machines (run on EACH listed machine):
+potluck up --mode split --devices mac32,mac16 --model llama-3.3-70b --real
+```
+
+Without `--real` it's a dry run that just prints the exact `exo` command and what to
+run where. (exo's flags vary by version — the dry run lets you eyeball them.)
+
+## Make the estimates real — `potluck bench`
+
+The planner ships with heuristic speeds. Measure your actual hardware and feed it back:
+
+```bash
+potluck bench qwen2.5-32b --url http://localhost:8000/v1 --calibrate mac32
+#   → 8.4 tok/s → effective bandwidth ≈ 150 GB/s
+#   ✓ calibrated 'mac32' — future `potluck plan` uses your real numbers
+```
+
+## Web dashboard
+
+```bash
+potluck dashboard          # → http://127.0.0.1:8777/
+```
+
+A single local page: your machines, combined memory, whether the engine is up, and
+the route/split plan for any model — with dropdowns to change model/quant/link.
+
 ## Project layout
 
 | Path | What |

@@ -24,10 +24,20 @@ the trade-offs and you pick.**
 - [ ] Pull live device specs from online peers instead of manual registration.
 
 ## Phase 2 — Engine adapter  **stub → real**
-- [ ] `potluck up` actually launches an exo node (today: prints what it *would* run).
-- [ ] Honor the chosen strategy: `potluck up --mode route|split --devices a,b`.
-- [ ] Read exo's live topology for `potluck status`.
-- [ ] Surface the OpenAI-compatible endpoint URL.
+- [x] Honor the chosen strategy: `potluck up --mode route|split --devices a,b`.
+- [x] `potluck up --real` launches exo (dry run by default so you can vet the command).
+- [x] `potluck status` / dashboard probe the endpoint for reachability.
+- [ ] Verify/lock exo flags against a pinned exo version (they drift between releases).
+- [ ] Real process supervision: restart-on-crash, log streaming.
+- [ ] Per-peer topology detail (needs a stable exo topology API).
+
+## Phase 1.6 — Calibration ✅
+- [x] `potluck bench` measures real tok/s against the live endpoint.
+- [x] `--calibrate <device>` writes measured bandwidth back so `plan` matches reality.
+
+## Phase 5 — Dashboard ✅ (v1)
+- [x] `potluck dashboard` — local web page: machines, memory, engine status, live plan.
+- [ ] Auto-refresh + show current running model and measured throughput.
 
 ## Phase 3 — Discovery / transport
 - [ ] LAN auto-discovery of pool peers.

@@ -21,7 +21,7 @@ import argparse
 import sys
 from dataclasses import asdict
 
-from . import __version__, config, engine, models, planner, pool
+from . import __version__, bench, config, dashboard, engine, models, planner, pool
 from .devices import Device, detect_local
 
 
@@ -139,11 +139,45 @@ def cmd_up(args: argparse.Namespace) -> None:
     p = _require_pool()
     if not engine.is_exo_installed():
         print("⚠️  exo isn't installed. Run ./scripts/setup.sh first.\n")
-    plan = engine.up(p.pool_id, api_port=args.port, dry_run=not args.real)
-    mode = "LAUNCHING" if args.real else "DRY RUN (pass --real to actually start)"
-    print(f"[{mode}] pool '{p.name}' ({p.pool_id})")
+    devices = [d.strip() for d in args.devices.split(",") if d.strip()] if args.devices else []
+    plan = engine.up(p.pool_id, mode=args.mode, devices=devices, model=args.model,
+                     port=args.port, dry_run=not args.real)
+    banner = "LAUNCHING" if args.real else "DRY RUN (pass --real to actually start)"
+    print(f"[{banner}] pool '{p.name}' · mode={plan.mode}" + (f" · model={plan.model}" if plan.model else ""))
     print("   command:  " + " ".join(plan.command))
     print("   API:      " + plan.api_url + "  (OpenAI-compatible)")
+    for line in plan.guidance:
+        print("   • " + line)
+
+
+def cmd_bench(args: argparse.Namespace) -> None:
+    try:
+        model = models.resolve(args.model, params=args.params)
+    except ValueError as e:
+        sys.exit(str(e))
+    print(f"Benchmarking {model.name} @ {args.quant} against {args.url} …")
+    try:
+        result = bench.run_bench(args.url, args.served_as or args.model, model, args.quant,
+                                 max_tokens=args.max_tokens)
+    except Exception as e:  # noqa: BLE001 — surface any transport/HTTP error plainly
+        sys.exit(f"Benchmark failed: {e}\n(Is a node serving the OpenAI API at {args.url}? "
+                 "Start one with `potluck up --real`.)")
+    print(f"   {result.completion_tokens} tokens in {result.seconds:.1f}s "
+          f"→ {result.tokens_per_sec:.1f} tok/s")
+    print(f"   effective bandwidth ≈ {result.effective_bandwidth_gbps:.0f} GB/s")
+    if args.calibrate:
+        devs = _load_devices()
+        match = next((d for d in devs if d.name == args.calibrate), None)
+        if match is None:
+            sys.exit(f"No registered device named {args.calibrate!r} to calibrate.")
+        match.bandwidth_gbps = round(result.effective_bandwidth_gbps, 1)
+        _save_devices([match if d.name == match.name else d for d in devs])
+        print(f"   ✓ calibrated '{match.name}' bandwidth → {match.bandwidth_gbps} GB/s "
+              "(future plans will use this)")
+
+
+def cmd_dashboard(args: argparse.Namespace) -> None:
+    dashboard.serve(host=args.host, port=args.port)
 
 
 def cmd_status(args: argparse.Namespace) -> None:
@@ -156,8 +190,8 @@ def cmd_status(args: argparse.Namespace) -> None:
     print(f"exo:     {'installed' if engine.is_exo_installed() else 'NOT installed'}")
     devs = _load_devices()
     print(f"Devices: {len(devs)} registered ({sum(d.usable_gb() for d in devs):.0f}G usable)")
-    topo = engine.topology()
-    print(f"Peers:   {len(topo.get('peers', []))} online")
+    topo = engine.topology(f"http://localhost:{args.port}/v1")
+    print(f"Engine:  {'reachable' if topo.get('reachable') else 'not reachable'}")
     if topo.get("note"):
         print(f"         ({topo['note']})")
 
@@ -205,11 +239,30 @@ def build_parser() -> argparse.ArgumentParser:
     plan_p.set_defaults(func=cmd_plan)
 
     up = sub.add_parser("up", help="bring this machine online in its pool")
+    up.add_argument("--mode", default="split", help="route | split")
+    up.add_argument("--devices", default="", help="comma-separated machine names for this strategy")
+    up.add_argument("--model", default=None, help="model to serve (optional)")
     up.add_argument("--port", type=int, default=8000)
     up.add_argument("--real", action="store_true", help="actually launch exo (default is a dry run)")
     up.set_defaults(func=cmd_up)
 
+    bench_p = sub.add_parser("bench", help="measure real tok/s and calibrate the planner")
+    bench_p.add_argument("model", help="catalog model that's being served (for sizing)")
+    bench_p.add_argument("--params", type=float, default=None, help="B params for a custom model")
+    bench_p.add_argument("--quant", default="q4")
+    bench_p.add_argument("--url", default="http://localhost:8000/v1", help="OpenAI-compatible base URL")
+    bench_p.add_argument("--served-as", default=None, help="model id the server expects (if different)")
+    bench_p.add_argument("--max-tokens", type=int, default=128)
+    bench_p.add_argument("--calibrate", default=None, help="registered device name to update from this run")
+    bench_p.set_defaults(func=cmd_bench)
+
+    dash = sub.add_parser("dashboard", help="serve the local web dashboard")
+    dash.add_argument("--host", default="127.0.0.1")
+    dash.add_argument("--port", type=int, default=8777)
+    dash.set_defaults(func=cmd_dashboard)
+
     status = sub.add_parser("status", help="show pool and cluster state")
+    status.add_argument("--port", type=int, default=8000, help="engine API port to probe")
     status.set_defaults(func=cmd_status)
 
     return parser
