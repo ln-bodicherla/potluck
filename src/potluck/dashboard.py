@@ -81,7 +81,7 @@ def render_page(devices: list[Device], model_key: str, quant: str, link: str,
     return f"""<!doctype html><html><head><meta charset="utf-8">
 <title>Potluck</title><style>{_STYLE}</style></head><body>
 <h1>🍲 Potluck</h1>
-<p>{online} · <span class="pill">{len(devices)} machines</span>
+<p>{online} · <span class="pill">{len(devices)} machine{"s" if len(devices) != 1 else ""}</span>
 <span class="pill">{total:.0f} GB usable</span></p>
 
 <h2>Machines</h2>
