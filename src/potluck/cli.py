@@ -141,7 +141,7 @@ def cmd_up(args: argparse.Namespace) -> None:
         print("⚠️  exo isn't installed. Run ./scripts/setup.sh first.\n")
     devices = [d.strip() for d in args.devices.split(",") if d.strip()] if args.devices else []
     plan = engine.up(p.pool_id, mode=args.mode, devices=devices, model=args.model,
-                     port=args.port, dry_run=not args.real)
+                     port=args.port, no_worker=args.no_worker, dry_run=not args.real)
     banner = "LAUNCHING" if args.real else "DRY RUN (pass --real to actually start)"
     print(f"[{banner}] pool '{p.name}' · mode={plan.mode}" + (f" · model={plan.model}" if plan.model else ""))
     print("   command:  " + " ".join(plan.command))
@@ -241,8 +241,9 @@ def build_parser() -> argparse.ArgumentParser:
     up = sub.add_parser("up", help="bring this machine online in its pool")
     up.add_argument("--mode", default="split", help="route | split")
     up.add_argument("--devices", default="", help="comma-separated machine names for this strategy")
-    up.add_argument("--model", default=None, help="model to serve (optional)")
-    up.add_argument("--port", type=int, default=8000)
+    up.add_argument("--model", default=None, help="model you intend to run (picked at request time)")
+    up.add_argument("--port", type=int, default=engine.DEFAULT_API_PORT, help="exo API port (default 52415)")
+    up.add_argument("--no-worker", action="store_true", help="coordinator-only (no local inference)")
     up.add_argument("--real", action="store_true", help="actually launch exo (default is a dry run)")
     up.set_defaults(func=cmd_up)
 
@@ -250,7 +251,7 @@ def build_parser() -> argparse.ArgumentParser:
     bench_p.add_argument("model", help="catalog model that's being served (for sizing)")
     bench_p.add_argument("--params", type=float, default=None, help="B params for a custom model")
     bench_p.add_argument("--quant", default="q4")
-    bench_p.add_argument("--url", default="http://localhost:8000/v1", help="OpenAI-compatible base URL")
+    bench_p.add_argument("--url", default="http://localhost:52415/v1", help="OpenAI-compatible base URL (exo default port 52415)")
     bench_p.add_argument("--served-as", default=None, help="model id the server expects (if different)")
     bench_p.add_argument("--max-tokens", type=int, default=128)
     bench_p.add_argument("--calibrate", default=None, help="registered device name to update from this run")
@@ -262,7 +263,7 @@ def build_parser() -> argparse.ArgumentParser:
     dash.set_defaults(func=cmd_dashboard)
 
     status = sub.add_parser("status", help="show pool and cluster state")
-    status.add_argument("--port", type=int, default=8000, help="engine API port to probe")
+    status.add_argument("--port", type=int, default=engine.DEFAULT_API_PORT, help="engine API port to probe")
     status.set_defaults(func=cmd_status)
 
     return parser

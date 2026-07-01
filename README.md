@@ -47,7 +47,7 @@ That's Potluck.
             │   └─ exo node       │ LAN/ │    └─ exo node      │
             │      (Metal)        │ TS   │       (Metal)       │
             └─────────┬───────────┘      └─────────────────────┘
-                      │  OpenAI-compatible API (:8000)
+                      │  OpenAI-compatible API (:52415)
                       ▼
             your apps / chat UI / scripts
 ```
@@ -67,7 +67,7 @@ auto-split across whoever is online.
 # On each machine you want in the pool:
 git clone https://github.com/<you>/potluck
 cd potluck
-./scripts/setup.sh          # installs exo + the potluck CLI
+./scripts/setup.sh          # installs the potluck CLI + checks exo prerequisites
 
 # On the first machine — create a pool:
 potluck pool create my-house
@@ -131,7 +131,7 @@ run where. (exo's flags vary by version — the dry run lets you eyeball them.)
 The planner ships with heuristic speeds. Measure your actual hardware and feed it back:
 
 ```bash
-potluck bench qwen2.5-32b --url http://localhost:8000/v1 --calibrate mac32
+potluck bench qwen2.5-32b --url http://localhost:52415/v1 --calibrate mac32
 #   → 8.4 tok/s → effective bandwidth ≈ 150 GB/s
 #   ✓ calibrated 'mac32' — future `potluck plan` uses your real numbers
 ```
@@ -150,7 +150,7 @@ the route/split plan for any model — with dropdowns to change model/quant/link
 | Path | What |
 |------|------|
 | `src/potluck/` | The Potluck CLI + pool/group logic (the part we own) |
-| `scripts/setup.sh` | Installs exo and the `potluck` command |
+| `scripts/setup.sh` | Installs the `potluck` command; checks exo's prerequisites |
 | `docs/ARCHITECTURE.md` | Design, the networking constraint, trust model |
 | `docs/ROADMAP.md` | What's a stub vs. real, ordered build plan |
 

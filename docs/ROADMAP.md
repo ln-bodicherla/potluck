@@ -27,9 +27,17 @@ the trade-offs and you pick.**
 - [x] Honor the chosen strategy: `potluck up --mode route|split --devices a,b`.
 - [x] `potluck up --real` launches exo (dry run by default so you can vet the command).
 - [x] `potluck status` / dashboard probe the endpoint for reachability.
-- [ ] Verify/lock exo flags against a pinned exo version (they drift between releases).
+- [x] **Verified flags against exo `main` (2026).** Corrected: `--namespace` (=pool),
+      `--api-port 52415`, `--no-worker` (CPU nodes); dropped the imagined
+      `--run-model`/`--node-id`/`--chatgpt-api-port`. See docs/ARCHITECTURE.md.
+- [ ] End-to-end real run + `bench` on hardware with exo installed. **Blocked locally:**
+      exo needs Python 3.13 (dev Mac has 3.14) + uv/node/Rust/macmon/Xcode toolchain.
 - [ ] Real process supervision: restart-on-crash, log streaming.
 - [ ] Per-peer topology detail (needs a stable exo topology API).
+
+## Packaging note
+- Install is **non-editable** (`pip install .`) — hatchling's editable `.pth` is not
+  honored on Python 3.14. Contributors: `PYTHONPATH=src python -m potluck.cli …`.
 
 ## Phase 1.6 — Calibration ✅
 - [x] `potluck bench` measures real tok/s against the live endpoint.

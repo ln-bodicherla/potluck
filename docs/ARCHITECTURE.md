@@ -66,12 +66,35 @@ jobs only, signed runtimes) could relax this; it is out of scope for the MVP.
 ## Why exo as the engine
 
 - Automatic device discovery + topology-aware auto-parallel (the hard scheduling).
-- Heterogeneous: Apple Silicon (Metal), NVIDIA (CUDA), more.
+- Apple Silicon via MLX + MLX-distributed; tensor parallelism across nodes.
 - OpenAI-compatible API, so every existing app/tool just works.
 - Active, popular, day-0 RDMA-over-Thunderbolt support.
 
 The engine is pluggable in principle (llama.cpp RPC / GPUStack could be alternative
 backends), but v1 targets exo only to stay focused.
+
+### How Potluck maps onto the *real* exo CLI
+
+Verified against exo `main` (2026). exo is a master/worker cluster you launch with
+`uv run exo` (or the `exo` console script); you do **not** pass it a model or topology.
+Potluck's `engine.py` builds this real invocation:
+
+| Potluck concept | Real exo flag | Notes |
+|---|---|---|
+| Pool identity | `--namespace potluck-<pool_id>` | Nodes with different namespaces never connect — this *is* pool isolation, enforced by exo. |
+| API / dashboard port | `--api-port 52415` | exo's real default (not 8000). |
+| CPU/weak node in a split | `--no-worker` | Coordinator-only: contributes networking, runs no inference. Ideal for a CPU-only laptop. |
+| Off-LAN trusted peers | `--bootstrap-peers <multiaddr,...>` | libp2p dial addresses. |
+| Which model to run | *(none — chosen per API request)* | exo has no launch-time model flag; you request the model against `/v1/chat/completions`. |
+
+**Route vs split is realized by which nodes run a worker in the pool's namespace**, not
+by a flag: route = one worker (others offline or `--no-worker`); split = a worker on
+each chosen machine.
+
+**Install reality:** exo is *not* `pip install exo`. It needs Python **3.13** (exact),
+`uv`, `node` (to build its dashboard), Rust (nightly), `macmon`, and Xcode's Metal
+toolchain, then a clone + dashboard build. `scripts/setup.sh` installs the Potluck CLI
+reliably and then checks/report which exo prerequisites are missing.
 
 ## Data & privacy
 

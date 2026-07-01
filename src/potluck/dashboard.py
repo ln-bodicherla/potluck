@@ -106,7 +106,7 @@ class _Handler(BaseHTTPRequestHandler):
         model_key = q.get("model", ["qwen2.5-32b"])[0]
         quant = q.get("quant", ["q4"])[0]
         link = q.get("link", ["wifi"])[0]
-        reachable = engine.probe_api("http://localhost:8000/v1")
+        reachable = engine.probe_api(f"http://localhost:{engine.DEFAULT_API_PORT}/v1")
         page = render_page(devices, model_key, quant, link, api_reachable=reachable)
         body = page.encode()
         self.send_response(200)
